@@ -1,139 +1,203 @@
-# TradeX — Phase 3
+# TradeX — Real-Time Trading Dashboard
 
-A professional trading dashboard with real market data.
+> A full-stack financial market dashboard built with the MERN stack, featuring live price feeds, financial news, technical signals, portfolio tracking, and WebSocket-powered real-time updates.
 
-- **Prices** → Alpha Vantage (25 calls/day free)
-- **News** → Newsdata.io (200 calls/day free)
-- **Signals** → Rule-based (SMA crossover, no AI calls)
 
 ---
 
-## Local Development
+## 📸 Preview
 
-### 1. Clone & install
+> *(Add a screenshot of your dashboard here)*
 
-```bash
-# Install server deps
-cd tradex/server && npm install
+---
 
-# Install client deps
-cd tradex/client && npm install
+## ✨ Features
+
+- 📈 **Real-Time Prices** — Live market data for stocks, crypto, forex and indices via Alpha Vantage
+- 📰 **Financial News Feed** — Symbol-specific news pulled from Newsdata.io with smart 6-hour caching
+- 🤖 **Technical Signals** — Rule-based BUY/SELL/HOLD signals using SMA crossover and momentum analysis
+- 💼 **Portfolio Tracker** — Track your holdings, P&L, and allocation breakdown
+- ⭐ **Watchlist** — Save and monitor your favourite instruments
+- 🔔 **Price Alerts** — Get notified via WebSocket when a symbol hits your target price
+- 🔐 **JWT Authentication** — Secure register/login with token-based sessions
+- ⚡ **WebSocket Live Ticks** — Socket.io pushes price updates to all connected clients in real time
+- 💾 **Smart Caching** — MongoDB-backed price and news cache with automatic staleness detection and API budget guards
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Purpose |
+|---|---|
+| React 18 + Vite | UI framework and build tool |
+| React Router v6 | Client-side routing |
+| Axios | HTTP client |
+| Socket.io Client | Real-time WebSocket connection |
+| ApexCharts | Interactive price charts |
+| Lucide React | Icon library |
+| Tailwind CSS | Utility-first styling |
+
+### Backend
+| Technology | Purpose |
+|---|---|
+| Node.js + Express | REST API server |
+| Socket.io | WebSocket server for live ticks |
+| MongoDB + Mongoose | Database and ODM |
+| JWT + bcryptjs | Authentication and password hashing |
+| Alpha Vantage API | Real-time market price data |
+| Newsdata.io API | Financial news feed |
+
+### Deployment
+| Service | Role |
+|---|---|
+| Vercel | Frontend hosting (React/Vite) |
+| Render | Backend hosting (Express/Node) |
+| MongoDB Atlas | Cloud database |
+
+---
+
+## 📁 Project Structure
+
+```
+tradex/
+├── client/                   # React frontend
+│   ├── src/
+│   │   ├── api/              # Axios API calls
+│   │   ├── components/       # Reusable UI components
+│   │   ├── context/          # Auth + Market context providers
+│   │   ├── pages/            # Route-level page components
+│   │   └── styles/           # Global styles
+│   ├── .env.example
+│   ├── vercel.json
+│   └── vite.config.js
+│
+└── server/                   # Express backend
+    ├── config/               # Database connection
+    ├── controllers/          # Route handler logic
+    ├── jobs/                 # Price scheduler (cron-style)
+    ├── middleware/            # Auth middleware
+    ├── models/               # Mongoose schemas
+    ├── routes/               # Express route definitions
+    ├── services/
+    │   └── aiProviders/      # Alpha Vantage + Newsdata.io clients
+    ├── utils/                # Symbol list, helpers
+    └── index.js              # Server entry point
 ```
 
-### 2. Configure environment
-
-**Server** — edit `server/.env`:
-```
-MONGO_URI=mongodb://localhost:27017/tradex   # or your MongoDB Atlas URI
-JWT_SECRET=some_long_random_string
-ALPHAVANTAGE_API_KEY=your_key_here           # alphavantage.co → free API key
-NEWSDATA_API_KEY=your_key_here               # newsdata.io → free API key
-```
-
-**Client** — `client/.env` is already set up (leave `VITE_API_URL` empty for dev).
-
-### 3. Run
-
-```bash
-# Terminal 1 — backend
-cd tradex/server && npm run dev
-
-# Terminal 2 — frontend
-cd tradex/client && npm run dev
-```
-
-Open http://localhost:5173
-
 ---
 
-## Production Deployment
+## ⚙️ Local Development Setup
 
-### Step 1 — Deploy backend to Render
+### Prerequisites
+- Node.js v18+
+- MongoDB (local or Atlas)
+- Alpha Vantage API key — [get free key](https://alphavantage.co/support/#api-key)
+- Newsdata.io API key — [get free key](https://newsdata.io)
 
-1. Push this repo to GitHub
-2. Go to [render.com](https://render.com) → New → **Web Service**
-3. Connect your repo
-4. Settings:
-   - **Root Directory:** `tradex/server`
-   - **Build Command:** `npm install`
-   - **Start Command:** `node index.js`
-5. Add Environment Variables (click "Add from .env" or paste each):
 
-| Key | Value |
-|-----|-------|
-| `NODE_ENV` | `production` |
-| `MONGO_URI` | Your MongoDB Atlas connection string |
-| `JWT_SECRET` | A long random secret |
-| `JWT_EXPIRES_IN` | `7d` |
-| `ALPHAVANTAGE_API_KEY` | Your Alpha Vantage key |
-| `NEWSDATA_API_KEY` | Your Newsdata.io key |
-| `CLIENT_URL` | Your Vercel URL (fill in after Step 2) |
-| `PRICE_STALE_MS` | `10800000` |
-| `PRICE_POLL_INTERVAL_MS` | `10800000` |
-| `AV_DAILY_LIMIT` | `23` |
-| `NEWS_CACHE_HOURS` | `6` |
-| `ND_DAILY_LIMIT` | `180` |
 
-6. Deploy → copy the URL (e.g. `https://tradex-server.onrender.com`)
+## 📊 API Budget Management
 
----
+Both external APIs are free tier — the app manages daily limits automatically.
 
-### Step 2 — Deploy frontend to Vercel
+| Provider | Free Limit | Usage Strategy |
+|---|---|---|
+| Alpha Vantage | 25 req/day | 3h cache + budget guard, falls back to stale cache |
+| Newsdata.io | 200 req/day | 6h cache per symbol, falls back to stale cache |
 
-1. Go to [vercel.com](https://vercel.com) → New Project → import your repo
-2. Settings:
-   - **Root Directory:** `tradex/client`
-   - **Framework Preset:** Vite
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-3. Environment Variables:
-
-| Key | Value |
-|-----|-------|
-| `VITE_API_URL` | Your Render URL (e.g. `https://tradex-server.onrender.com`) |
-
-4. Deploy → copy your Vercel URL
-
----
-
-### Step 3 — Link them together
-
-1. Go back to **Render** → your service → Environment
-2. Set `CLIENT_URL` = your Vercel URL (e.g. `https://tradex.vercel.app`)
-3. Render will auto-redeploy
-
----
-
-### Step 4 (Optional) — Prevent Render cold starts
-
-Render free tier sleeps after 15 min of inactivity (30s cold start on next request).
-
-Fix: set up a free monitor at [uptimerobot.com](https://uptimerobot.com) to ping  
-`https://tradex-server.onrender.com/api/health` every **10 minutes**.
-
----
-
-## API Keys (Free Tier)
-
-| Service | Sign Up | Free Limit |
-|---------|---------|------------|
-| [Alpha Vantage](https://alphavantage.co/support/#api-key) | No credit card | 25 req/day |
-| [Newsdata.io](https://newsdata.io) | No credit card | 200 req/day |
-
----
-
-## Budget Monitoring
-
-Check daily API usage at any time:
-
+Monitor live usage anytime:
 ```
 GET /api/health
 ```
 
-Returns:
-```json
-{
-  "alphavantage": { "usedToday": 3, "dailyLimit": 23, "limitReached": false },
-  "newsdata":     { "usedToday": 7, "dailyLimit": 180, "limitReached": false }
-}
+---
+
+## 🌐 API Endpoints
+
+### Auth
 ```
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/auth/me
+```
+
+### Market
+```
+GET    /api/market/quote/:symbol
+GET    /api/market/quotes
+```
+
+### Portfolio
+```
+GET    /api/portfolio
+POST   /api/portfolio
+DELETE /api/portfolio/:id
+```
+
+### Watchlist
+```
+GET    /api/watchlist
+POST   /api/watchlist
+DELETE /api/watchlist/:symbol
+```
+
+### Alerts
+```
+GET    /api/alerts
+POST   /api/alerts
+DELETE /api/alerts/:id
+```
+
+### News
+```
+GET    /api/news/:symbol
+GET    /api/news
+```
+
+### Signals
+```
+GET    /api/signals/:symbol
+```
+
+---
+
+## 🔌 WebSocket Events
+
+| Event | Direction | Description |
+|---|---|---|
+| `join:market` | Client → Server | Subscribe to symbol price ticks |
+| `leave:market` | Client → Server | Unsubscribe from symbol ticks |
+| `join:user` | Client → Server | Join personal alert room |
+| `tick` | Server → Client | Live price update for a symbol |
+| `alert:triggered` | Server → Client | Fires when a price alert is hit |
+
+---
+
+## 🧠 Key Engineering Decisions
+
+**Why Alpha Vantage over AI-generated prices?**
+Phase 1 used Gemini/OpenAI to fetch prices via web grounding — creative but unreliable and quota-heavy. Switched to Alpha Vantage for deterministic, real market data with zero hallucination risk.
+
+**Why rule-based signals over AI?**
+SMA crossover signals are transparent and explainable — users can see exactly why a BUY fired. AI black-box signals added latency and API cost with no accuracy benefit for this use case.
+
+**Why split Vercel + Render?**
+Socket.io requires persistent WebSocket connections, which Vercel Serverless Functions don't support. Render provides a persistent Node.js process; Vercel handles the static React build.
+
+---
+
+## 📄 License
+
+MIT License — feel free to fork, modify and build on this.
+
+---
+
+## 👤 Author
+
+**Yug Nanda**
+B.Tech Information Technology — SKIT Rajasthan (2024–2028)
+
+---
+
+> *Built as a personal project to bridge institutional trading concepts (ICT methodology, smart money) with full-stack engineering.*
